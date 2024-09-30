@@ -2,4 +2,4 @@ database:
   host: 'localhost'
   user: 'root'
   password: '7979'
-  database: 'db_lab_4_5'
+  database: 'online_banking'
