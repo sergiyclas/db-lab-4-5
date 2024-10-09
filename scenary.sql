@@ -1,20 +1,18 @@
-DROP DATABASE IF EXISTS online_banking;
+-- DROP DATABASE IF EXISTS online_banking;
 CREATE DATABASE IF NOT EXISTS online_banking;
 USE online_banking;
 
-
 -- Скидання таблиць
-DROP TABLE IF EXISTS accounts;
-DROP TABLE IF EXISTS authorizations;
-DROP TABLE IF EXISTS cards;
-DROP TABLE IF EXISTS customers;
-DROP TABLE IF EXISTS fees;
-DROP TABLE IF EXISTS needs;
-DROP TABLE IF EXISTS payment_templates;
-DROP TABLE IF EXISTS status_transactions;
-DROP TABLE IF EXISTS transactions;
 DROP TABLE IF EXISTS transactionsaccounts;
-
+DROP TABLE IF EXISTS status_transactions;
+DROP TABLE IF EXISTS payment_templates;
+DROP TABLE IF EXISTS needs;
+DROP TABLE IF EXISTS fees;
+DROP TABLE IF EXISTS cards;
+DROP TABLE IF EXISTS authorizations;
+DROP TABLE IF EXISTS accounts;
+DROP TABLE IF EXISTS customers;
+DROP TABLE IF EXISTS transactions;
 
 -- Створення таблиць
 CREATE TABLE customers (

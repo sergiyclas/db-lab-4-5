@@ -35,7 +35,7 @@ class Account:
 
 # Клас для таблиці transactions
 class Transaction:
-    def __init__(self, transaction_id: int, amount: float, transaction_date: datetime):
+    def __init__(self, transaction_id, amount, transaction_date):
         self.transaction_id = transaction_id
         self.amount = amount
         self.transaction_date = transaction_date
@@ -44,7 +44,29 @@ class Transaction:
         return {
             "transaction_id": self.transaction_id,
             "amount": self.amount,
-            "transaction_date": self.transaction_date.strftime('%Y-%m-%d')
+            "transaction_date": self.transaction_date,
+        }
+
+# Клас для таблиці transactions
+class Transaction_All_Info:
+    def __init__(self, transaction_id, amount, transaction_date, fee_amount=None, fee_date=None, status=None, status_date=None):
+        self.transaction_id = transaction_id
+        self.amount = amount
+        self.transaction_date = transaction_date
+        self.fee_amount = fee_amount
+        self.fee_date = fee_date
+        self.status = status
+        self.status_date = status_date
+
+    def to_dict(self):
+        return {
+            "transaction_id": self.transaction_id,
+            "amount": self.amount,
+            "transaction_date": self.transaction_date,
+            "fee_amount": self.fee_amount,
+            "fee_date": self.fee_date,
+            "status": self.status,
+            "status_date": self.status_date
         }
 
 # Клас для таблиці TransactionsAccounts
@@ -166,20 +188,3 @@ class StatusTransaction:
             "status": self.status,
             "status_date": self.status_date.strftime('%Y-%m-%d') if self.status_date else None
         }
-
-
-# class User:
-#     def __init__(self, id, username, email, password, created_at):
-#         self.id = id
-#         self.username = username
-#         self.email = email
-#         self.password = password
-#         self.created_at = created_at
-#
-#     def to_dict(self):
-#         return {
-#             "id": self.id,
-#             "username": self.username,
-#             "email": self.email,
-#             "password": self.password,
-#         }
