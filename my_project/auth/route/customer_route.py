@@ -8,7 +8,7 @@ def init_customer_routes(app):
     @app.route("/customers", methods=["GET"])
     def get_customers():
         customers = customer_service.get_all_customers()
-        return jsonify([customer.to_dict() for customer in customers])
+        return jsonify(customers)
 
     @app.route("/customers/<int:customer_id>", methods=["GET"])
     def get_customer(customer_id):

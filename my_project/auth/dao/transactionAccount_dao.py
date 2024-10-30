@@ -7,10 +7,15 @@ class TransactionAccountDAO(BaseDAO):
     def get_all_transactions_accounts(self):
         self.cursor.execute("SELECT * FROM TransactionsAccounts")
         result = self.cursor.fetchall()
-        return [TransactionsAccounts(**dict(zip(row, row.values()))) for row in result]
+        return [TransactionsAccounts(**row) for row in result]
 
 
     def get_transactions_account_by_ids(self, account_ids):
+        if not account_ids:
+            self.cursor.execute("SELECT account_id FROM accounts")
+            result = self.cursor.fetchall()
+            account_ids = [account['account_id'] for account in result]
+
         format_strings = ','.join(['%s'] * len(account_ids))
         query = f"""
             SELECT t.transaction_id, t.amount, t.transaction_date, f.fee_amount, f.fee_date, s.status, s.status_date,
@@ -21,13 +26,13 @@ class TransactionAccountDAO(BaseDAO):
             LEFT JOIN fees f ON t.transaction_id = f.transaction_id
             LEFT JOIN status_transactions s ON t.transaction_id = s.transaction_id
             WHERE a.account_id IN ({format_strings})
+            ORDER BY a.account_id ASC
         """
 
         self.cursor.execute(query, account_ids)
 
         result = self.cursor.fetchall()
-
-        transactions = []
+        transactions = {}
         for row in result:
             transaction_data = dict(zip(row, row.values()))
 
@@ -39,13 +44,11 @@ class TransactionAccountDAO(BaseDAO):
                 "fee_date": transaction_data['fee_date'],
                 "status": transaction_data['status'],
                 "status_date": transaction_data['status_date'],
-                "account": {
-                    "account_id": transaction_data['account_id'],
-                    "account_number": transaction_data['account_number'],
-                    "balance": transaction_data['balance']
-                }
             }
-            transactions.append(transaction)
+            if not f"account_{transaction_data['account_id']}" in transactions:
+                transactions[f"account_{transaction_data['account_id']}"] = [transaction]
+            else:
+                transactions[f"account_{transaction_data['account_id']}"].append(transaction)
 
         return transactions
 

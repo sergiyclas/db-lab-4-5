@@ -7,9 +7,7 @@ def init_transaction_account_routes(app):
     @app.route("/accounts/<int:account_id>/transactions", methods=["GET"])
     def get_transactions_for_account(account_id):
         transactions = transaction_account_service.get_transactions_account_by_id(account_id)
-        if not isinstance(transactions, list):
-            transactions = [transactions]
-        return jsonify([transaction.to_dict() for transaction in transactions])
+        return jsonify(transactions)
 
     @app.route("/accounts/<int:account_id>/transactions", methods=["POST"])
     def link_transaction_to_account(account_id):
@@ -19,18 +17,13 @@ def init_transaction_account_routes(app):
             transaction_account_service.create_transactions_account(account_id, transaction_id)
             return jsonify({"message": "Transaction linked successfully"}), 201
         except Exception as e:
-            return jsonify(f'Smth went wrong: {e}'), 500
+            return jsonify(f'Something went wrong: {e}'), 500
 
     @app.route("/accounts/transactions", methods=["GET"])
     def show_all_links():
-        if request.values:
-            account_ids = request.json.get('account_ids')
-            transactions = transaction_account_service.get_transactions_account_by_ids(account_ids)
-
-            return jsonify(transactions)
-
-        transactions = transaction_account_service.get_all_transactions_accounts()
-        return jsonify([transaction.to_dict() for transaction in transactions])
+        account_ids = request.get_json().get('account_ids')  # Змінив тут
+        transactions = transaction_account_service.get_transactions_account_by_ids(account_ids)
+        return jsonify(transactions)
 
     @app.route("/accounts/<int:account_id>/transactions", methods=["DELETE"])
     def delete_link_transaction_by_id(account_id):

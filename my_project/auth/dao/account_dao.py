@@ -12,12 +12,6 @@ class AccountDAO(BaseDAO):
     def get_accounts_by_customer_id(self, customer_id):
         self.cursor.execute("SELECT * FROM accounts WHERE customer_id = %s", (customer_id,))
         result = self.cursor.fetchall()
-        # result = []
-        # if row:
-        #     for account in row:
-        #         result.append(Account(**dict(zip(account, account.values()))))
-        # return result
-
         return [Account(**row) for row in result]
 
     def get_account_by_id(self, account_id):

@@ -38,6 +38,4 @@ def init_account_routes(app):
     @app.route("/customers/<int:customer_id>/accounts", methods=["GET"])
     def get_accounts_for_customer(customer_id):
         accounts = account_service.get_accounts_by_customer_id(customer_id)
-        if not isinstance(accounts, list):
-            accounts = [accounts]
-        return jsonify([account.to_dict() for account in accounts])
+        return jsonify(accounts)

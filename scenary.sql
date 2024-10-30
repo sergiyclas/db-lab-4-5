@@ -27,7 +27,7 @@ CREATE TABLE accounts (
     customer_id INT,
     account_number VARCHAR(20) NOT NULL,
     balance DECIMAL(15, 2) NOT NULL,
-    FOREIGN KEY (customer_id) REFERENCES customers(customer_id)
+    FOREIGN KEY (customer_id) REFERENCES customers(customer_id) ON DELETE CASCADE
 );
 
 CREATE TABLE transactions (
@@ -40,8 +40,8 @@ CREATE TABLE TransactionsAccounts (
     id INT PRIMARY KEY AUTO_INCREMENT,
     account_id INT,
     transaction_id INT,
-    FOREIGN KEY (account_id) REFERENCES accounts(account_id),
-    FOREIGN KEY (transaction_id) REFERENCES transactions(transaction_id)
+    FOREIGN KEY (account_id) REFERENCES accounts(account_id) ON DELETE CASCADE,
+    FOREIGN KEY (transaction_id) REFERENCES transactions(transaction_id) ON DELETE CASCADE
 );
 
 CREATE TABLE payment_templates (
@@ -49,7 +49,7 @@ CREATE TABLE payment_templates (
     account_id INT,
     template_name VARCHAR(50) NOT NULL,
     template_details TEXT,
-    FOREIGN KEY (account_id) REFERENCES accounts(account_id)
+    FOREIGN KEY (account_id) REFERENCES accounts(account_id) ON DELETE CASCADE
 );
 
 CREATE TABLE cards (
@@ -58,7 +58,7 @@ CREATE TABLE cards (
     card_number VARCHAR(20) NOT NULL,
     card_type VARCHAR(50),
     expiry_date DATE,
-    FOREIGN KEY (account_id) REFERENCES accounts(account_id)
+    FOREIGN KEY (account_id) REFERENCES accounts(account_id) ON DELETE CASCADE
 );
 
 CREATE TABLE needs (
@@ -69,7 +69,7 @@ CREATE TABLE needs (
     description TEXT,
     category VARCHAR(50),
     priority INT,
-    FOREIGN KEY (transaction_id) REFERENCES transactions(transaction_id)
+    FOREIGN KEY (transaction_id) REFERENCES transactions(transaction_id) ON DELETE CASCADE
 );
 
 CREATE TABLE authorizations (
@@ -78,24 +78,70 @@ CREATE TABLE authorizations (
     login_time TIMESTAMP,
     logout_time TIMESTAMP,
     password VARCHAR(100) NOT NULL,
-    FOREIGN KEY (account_id) REFERENCES accounts(account_id)
+    FOREIGN KEY (account_id) REFERENCES accounts(account_id) ON DELETE CASCADE
 );
 
 CREATE TABLE fees (
     fee_id INT PRIMARY KEY AUTO_INCREMENT,
-    transaction_id INT UNIQUE, -- обмеження для зв'язку один до одного
+    transaction_id INT UNIQUE,
     fee_amount DECIMAL(15, 2),
     fee_date DATE,
-    FOREIGN KEY (transaction_id) REFERENCES transactions(transaction_id)
+    FOREIGN KEY (transaction_id) REFERENCES transactions(transaction_id) ON DELETE CASCADE
 );
 
 CREATE TABLE status_transactions (
     status_id INT PRIMARY KEY AUTO_INCREMENT,
-    transaction_id INT UNIQUE, -- обмеження для зв'язку один до одного
+    transaction_id INT UNIQUE,
     status VARCHAR(50),
     status_date DATE,
-    FOREIGN KEY (transaction_id) REFERENCES transactions(transaction_id)
+    FOREIGN KEY (transaction_id) REFERENCES transactions(transaction_id) ON DELETE CASCADE
 );
+
+-- Збережені процедури
+DELIMITER //
+
+DROP PROCEDURE IF EXISTS InsertIntoTable;
+CREATE PROCEDURE InsertIntoTable(IN tableName VARCHAR(50), IN columnName VARCHAR(50), IN value VARCHAR(50))
+BEGIN
+    SET @sql = CONCAT('INSERT INTO ', tableName, ' (', columnName, ') VALUES (', QUOTE(value), ')');
+    PREPARE stmt FROM @sql;
+    EXECUTE stmt;
+    DEALLOCATE PREPARE stmt;
+END //
+
+DROP PROCEDURE IF EXISTS InsertIntoJoinTable;
+CREATE PROCEDURE InsertIntoJoinTable(IN firstTable VARCHAR(50), IN secondTable VARCHAR(50), IN value1 VARCHAR(50), IN value2 VARCHAR(50))
+BEGIN
+    SET @sql = CONCAT('INSERT INTO ', firstTable, ' (column_name1, column_name2) VALUES ((SELECT id FROM ', secondTable, ' WHERE name = ', QUOTE(value1), '), (SELECT id FROM ', secondTable, ' WHERE name = ', QUOTE(value2), '))');
+    PREPARE stmt FROM @sql;
+    EXECUTE stmt;
+    DEALLOCATE PREPARE stmt;
+END //
+
+DROP PROCEDURE IF EXISTS InsertTenRows;
+CREATE PROCEDURE InsertTenRows(IN tableName VARCHAR(50))
+BEGIN
+    DECLARE i INT DEFAULT 1;
+    WHILE i <= 10 DO
+        SET @sql = CONCAT('INSERT INTO ', tableName, ' (name) VALUES (', QUOTE(CONCAT('Noname', i)), ')');
+        PREPARE stmt FROM @sql;
+        EXECUTE stmt;
+        SET i = i + 1;
+        DEALLOCATE PREPARE stmt;
+    END WHILE;
+END //
+
+DROP PROCEDURE IF EXISTS GetColumnStats;
+CREATE PROCEDURE GetColumnStats(IN statType VARCHAR(10), IN columnName VARCHAR(50), OUT result DECIMAL(15, 2))
+BEGIN
+    SET @sql = CONCAT('SELECT ', statType, '(', columnName, ') INTO @result FROM your_table_name'); -- Змініть your_table_name на вашу таблицю
+    PREPARE stmt FROM @sql;
+    EXECUTE stmt;
+    SET result = @result; -- Зберігаємо результат у вихідному параметрі
+    DEALLOCATE PREPARE stmt;
+END //
+
+DELIMITER ;
 
 
 -- Заповнення таблиць

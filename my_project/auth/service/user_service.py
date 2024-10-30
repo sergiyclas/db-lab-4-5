@@ -1,17 +1,19 @@
 # from my_project.auth.dao.user_dao import CustomerDAO, AccountDAO, TransactionDAO, TransactionAccountDAO, PaymentTemplateDAO
+from flask import jsonify
+
 from my_project.auth.dao.account_dao import AccountDAO
 from my_project.auth.dao.customer_dao import CustomerDAO
 from my_project.auth.dao.transaction_dao import TransactionDAO
 from my_project.auth.dao.transactionAccount_dao import TransactionAccountDAO
 from my_project.auth.dao.paymentTemplate_dao import PaymentTemplateDAO
 
-
 class CustomerService:
     def __init__(self):
         self.customer_dao = CustomerDAO()
 
     def get_all_customers(self):
-        return self.customer_dao.get_all_customers()
+        customers = self.customer_dao.get_all_customers()
+        return [customer.to_dict() for customer in customers]
 
     def get_customer_by_id(self, customer_id):
         return self.customer_dao.get_customer_by_id(customer_id)
@@ -37,7 +39,11 @@ class AccountService:
         return self.account_dao.get_account_by_id(account_id)
 
     def get_accounts_by_customer_id(self, customer_id):
-        return self.account_dao.get_accounts_by_customer_id(customer_id)
+        accounts = self.account_dao.get_accounts_by_customer_id(customer_id)
+        if not isinstance(accounts, list):
+            return [accounts]
+        accounts = [account.to_dict() for account in accounts]
+        return accounts
 
     def create_account(self, customer_id, account_number, balance):
         return self.account_dao.create_account(customer_id, account_number, balance)
@@ -77,7 +83,11 @@ class TransactionAccountService:
         return self.transactions_accounts_dao.get_all_transactions_accounts()
 
     def get_transactions_account_by_id(self, account_id):
-        return self.transactions_accounts_dao.get_transactions_account_by_id(account_id)
+        transactions = self.transactions_accounts_dao.get_transactions_account_by_id(account_id)
+        if not isinstance(transactions, list):
+            transactions = [transactions]
+        transactions = [transaction.to_dict() for transaction in transactions]
+        return transactions
 
     def create_transactions_account(self, account_id, transaction_id):
         return self.transactions_accounts_dao.create_transactions_account(account_id, transaction_id)
