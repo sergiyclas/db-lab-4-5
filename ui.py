@@ -98,15 +98,15 @@ with gr.Blocks() as demo:
         outputs=transactions_output
     )
 
-    with gr.Row():
-        account_id_input = gr.Number(label="Account ID", precision=0)
-        transaction_id_input = gr.Number(label="Transaction ID", precision=0)
-
-    connect_account_to_transaction_btn = gr.Button("Connect Account and Transaction")
-    connect_account_to_transaction_output = gr.JSON(label="Output")
-    connect_account_to_transaction_btn.click(transaction_account_service.create_transactions_account,
-                                             inputs=[account_id_input, transaction_id_input],
-                                             outputs=connect_account_to_transaction_output)
+    # with gr.Row():
+    #     account_id_input = gr.Number(label="Account ID", precision=0)
+    #     transaction_id_input = gr.Number(label="Transaction ID", precision=0)
+    #
+    # connect_account_to_transaction_btn = gr.Button("Connect Account and Transaction")
+    # connect_account_to_transaction_output = gr.JSON(label="Output")
+    # connect_account_to_transaction_btn.click(transaction_account_service.create_transactions_account,
+    #                                          inputs=[account_id_input, transaction_id_input],
+    #                                          outputs=connect_account_to_transaction_output)
 
     with gr.Row():
         accounts_id_input = gr.Textbox(label="Account IDs splitted by coma(,): 1, 2, 3, 4")

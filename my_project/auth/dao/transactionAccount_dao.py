@@ -9,7 +9,6 @@ class TransactionAccountDAO(BaseDAO):
         result = self.cursor.fetchall()
         return [TransactionsAccounts(**row) for row in result]
 
-
     def get_transactions_account_by_ids(self, account_ids):
         if not account_ids:
             self.cursor.execute("SELECT account_id FROM accounts")
@@ -18,18 +17,42 @@ class TransactionAccountDAO(BaseDAO):
 
         format_strings = ','.join(['%s'] * len(account_ids))
         query = f"""
-            SELECT t.transaction_id, t.amount, t.transaction_date, f.fee_amount, f.fee_date, s.status, s.status_date,
-                   a.account_id, a.account_number, a.balance
-            FROM transactions t
-            JOIN TransactionsAccounts ta ON t.transaction_id = ta.transaction_id
-            JOIN accounts a ON ta.account_id = a.account_id
-            LEFT JOIN fees f ON t.transaction_id = f.transaction_id
-            LEFT JOIN status_transactions s ON t.transaction_id = s.transaction_id
-            WHERE a.account_id IN ({format_strings})
-            ORDER BY a.account_id ASC
+            SELECT 
+                ta1.account_id AS source_account_id,
+                a1.account_number AS source_account_number,
+                a1.balance AS source_account_balance,
+                ta2.account_id AS destination_account_id,
+                a2.account_number AS destination_account_number,
+                a2.balance AS destination_account_balance,
+                t.transaction_id,
+                t.amount,
+                t.transaction_date,
+                f.fee_amount,
+                f.fee_date,
+                s.status,
+                s.status_date
+            FROM 
+                TransactionsAccounts ta1
+            JOIN 
+                TransactionsAccounts ta2 ON ta1.transaction_id = ta2.transaction_id AND ta1.account_id != ta2.account_id
+            JOIN 
+                accounts a1 ON ta1.account_id = a1.account_id
+            JOIN 
+                accounts a2 ON ta2.account_id = a2.account_id
+            JOIN 
+                transactions t ON ta1.transaction_id = t.transaction_id
+            LEFT JOIN 
+                fees f ON t.transaction_id = f.transaction_id
+            LEFT JOIN 
+                status_transactions s ON t.transaction_id = s.transaction_id
+            WHERE 
+                a1.account_id IN ({format_strings}) OR a2.account_id IN ({format_strings})
+            ORDER BY 
+                t.transaction_date, t.transaction_id
         """
 
-        self.cursor.execute(query, account_ids)
+        # Execute the query with `account_ids` as parameters twice (for both source and destination filters)
+        self.cursor.execute(query, account_ids + account_ids)
 
         result = self.cursor.fetchall()
         transactions = {}
@@ -44,11 +67,19 @@ class TransactionAccountDAO(BaseDAO):
                 "fee_date": transaction_data['fee_date'],
                 "status": transaction_data['status'],
                 "status_date": transaction_data['status_date'],
+                "source_account_id": transaction_data['source_account_id'],
+                "source_account_number": transaction_data['source_account_number'],
+                "source_account_balance": transaction_data['source_account_balance'],
+                "destination_account_id": transaction_data['destination_account_id'],
+                "destination_account_number": transaction_data['destination_account_number'],
+                "destination_account_balance": transaction_data['destination_account_balance'],
             }
-            if not f"account_{transaction_data['account_id']}" in transactions:
-                transactions[f"account_{transaction_data['account_id']}"] = [transaction]
+
+            # Group transactions by source account
+            if not f"account_{transaction_data['source_account_id']}" in transactions:
+                transactions[f"account_{transaction_data['source_account_id']}"] = [transaction]
             else:
-                transactions[f"account_{transaction_data['account_id']}"].append(transaction)
+                transactions[f"account_{transaction_data['source_account_id']}"].append(transaction)
 
         return transactions
 

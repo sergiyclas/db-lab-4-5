@@ -21,7 +21,7 @@ def init_transaction_account_routes(app):
 
     @app.route("/accounts/transactions", methods=["GET"])
     def show_all_links():
-        account_ids = request.get_json().get('account_ids')  # Змінив тут
+        account_ids = request.get_json().get('account_ids')
         transactions = transaction_account_service.get_transactions_account_by_ids(account_ids)
         return jsonify(transactions)
 
