@@ -20,15 +20,13 @@ class TransactionAccountDAO(BaseDAO):
             SELECT 
                 ta1.account_id AS source_account_id,
                 a1.account_number AS source_account_number,
-                a1.balance AS source_account_balance,
                 ta2.account_id AS destination_account_id,
                 a2.account_number AS destination_account_number,
-                a2.balance AS destination_account_balance,
                 t.transaction_id,
                 t.amount,
-                t.transaction_date,
+
                 f.fee_amount,
-                f.fee_date,
+
                 s.status,
                 s.status_date
             FROM 
@@ -62,17 +60,17 @@ class TransactionAccountDAO(BaseDAO):
             transaction = {
                 "transaction_id": transaction_data['transaction_id'],
                 "amount": transaction_data['amount'],
-                "transaction_date": transaction_data['transaction_date'],
+                # "transaction_date": transaction_data['transaction_date'],
                 "fee_amount": transaction_data['fee_amount'],
-                "fee_date": transaction_data['fee_date'],
+                # "fee_date": transaction_data['fee_date'],
                 "status": transaction_data['status'],
                 "status_date": transaction_data['status_date'],
                 "source_account_id": transaction_data['source_account_id'],
                 "source_account_number": transaction_data['source_account_number'],
-                "source_account_balance": transaction_data['source_account_balance'],
+                # "source_account_balance": transaction_data['source_account_balance'],
                 "destination_account_id": transaction_data['destination_account_id'],
                 "destination_account_number": transaction_data['destination_account_number'],
-                "destination_account_balance": transaction_data['destination_account_balance'],
+                # "destination_account_balance": transaction_data['destination_account_balance'],
             }
 
             # Group transactions by source account

@@ -7,9 +7,7 @@ account_service = AccountService()
 transaction_service = TransactionService()
 transaction_account_service = TransactionAccountService()
 
-# Створюємо Gradio UI
 with gr.Blocks() as demo:
-    # Блок для клієнтів
     gr.Markdown("# Manage Customers")
     with gr.Row():
         customer_name = gr.Textbox(label="Customer Name", placeholder="Enter customer name")
@@ -36,7 +34,6 @@ with gr.Blocks() as demo:
         outputs=customers_output
     )
 
-    # Блок для облікових записів
     gr.Markdown("# Manage Accounts")
     with gr.Row():
         customer_id_for_account = gr.Textbox(label="Customer ID", placeholder='Enter Customer id to connect')
@@ -74,7 +71,6 @@ with gr.Blocks() as demo:
         outputs=accounts_output
     )
 
-    # Блок для транзакцій
     gr.Markdown("# Manage Transactions")
     with gr.Row():
         transaction_amount = gr.Textbox(label="Transaction Amount", placeholder='Enter Amount of transaction')
@@ -98,16 +94,6 @@ with gr.Blocks() as demo:
         outputs=transactions_output
     )
 
-    # with gr.Row():
-    #     account_id_input = gr.Number(label="Account ID", precision=0)
-    #     transaction_id_input = gr.Number(label="Transaction ID", precision=0)
-    #
-    # connect_account_to_transaction_btn = gr.Button("Connect Account and Transaction")
-    # connect_account_to_transaction_output = gr.JSON(label="Output")
-    # connect_account_to_transaction_btn.click(transaction_account_service.create_transactions_account,
-    #                                          inputs=[account_id_input, transaction_id_input],
-    #                                          outputs=connect_account_to_transaction_output)
-
     with gr.Row():
         accounts_id_input = gr.Textbox(label="Account IDs splitted by coma(,): 1, 2, 3, 4")
     show_account_transactions_btn = gr.Button("Show all transactions these accounts")
@@ -118,5 +104,5 @@ with gr.Blocks() as demo:
         outputs=account_transactions_output
     )
 
-# Запуск Gradio додатка
-demo.launch(share=True)
+# demo.launch(share=True)
+demo.launch()
