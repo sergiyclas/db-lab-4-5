@@ -25,11 +25,29 @@ class CustomerDAO(BaseDAO):
         self.connection.commit()
         return self.cursor.lastrowid
 
+    def insert_in_allowed_names(self, name):
+        self.cursor.execute(
+            "INSERT INTO allowed_names (name) VALUES (%s);",
+            (name,)
+        )
+        self.connection.commit()
+        return self.cursor.lastrowid
+
+    def create_customer_noname(self, start, end):
+        self.cursor.execute(
+            "CALL insert_multiple_rows_customers(%s, %s)",
+            (start, end)
+        )
+        self.connection.commit()
+        return self.cursor.lastrowid
+
     def update_customer(self, customer_id, customer_name, email, phone):
         query = "UPDATE customers SET customer_name = %s, email = %s, phone = %s WHERE customer_id = %s"
         self.cursor.execute(query, (customer_name, email, phone, customer_id))
         self.connection.commit()
+        return self.cursor.lastrowid
 
     def delete_customer(self, customer_id):
         self.cursor.execute("DELETE FROM customers WHERE customer_id = %s", (customer_id,))
         self.connection.commit()
+        return self.cursor.lastrowid

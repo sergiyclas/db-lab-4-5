@@ -21,6 +21,12 @@ class CustomerService:
     def create_customer(self, customer_name, email, phone):
         return self.customer_dao.create_customer(customer_name, email, phone)
 
+    def insert_in_allowed_names(self, name):
+        return self.customer_dao.insert_in_allowed_names(name)
+
+    def create_customer_noname(self, start, end):
+        return self.customer_dao.create_customer_noname(start, end)
+
     def update_customer(self, customer_id, customer_name, email, phone):
         self.customer_dao.update_customer(customer_id, customer_name, email, phone)
 
@@ -65,6 +71,10 @@ class TransactionService:
     def get_transaction_by_id(self, transaction_id):
         return self.transaction_dao.get_transaction_by_id(transaction_id)
 
+    def get_log_by_transaction_id(self, transaction_id):
+        logs = self.transaction_dao.get_log_by_transaction_id(transaction_id)
+        return [log.to_dict() for log in logs]
+
     def create_transaction(self, amount, transaction_date):
         return self.transaction_dao.create_transaction(amount, transaction_date)
 
@@ -74,13 +84,29 @@ class TransactionService:
     def delete_transaction(self, transaction_id):
         self.transaction_dao.delete_transaction(transaction_id)
 
+    def get_all_logs(self):
+        return self.transaction_dao.get_all_logs()
+
+    def insert_into_table(self, table_name, column_list, value_list):
+        return self.transaction_dao.insert_into_table(table_name, column_list, value_list)
+
+    def count_transaction(self, column_name, operation):
+        result = self.transaction_dao.count_transaction(column_name, operation)
+        return [res.to_dict() for res in result]
+
+    def create_tables(self):
+        return self.transaction_dao.create_tables()
 
 class TransactionAccountService:
     def __init__(self):
         self.transactions_accounts_dao = TransactionAccountDAO()
 
     def get_all_transactions_accounts(self):
-        return self.transactions_accounts_dao.get_all_transactions_accounts()
+        transactionaccounts = self.transactions_accounts_dao.get_all_transactions_accounts()
+        if not isinstance(transactionaccounts, list):
+            transactions = [transactionaccounts]
+        transactions = [transaction.to_dict() for transaction in transactionaccounts]
+        return transactions
 
     def get_transactions_account_by_id(self, account_id):
         transactions = self.transactions_accounts_dao.get_transactions_account_by_id(account_id)
@@ -91,6 +117,9 @@ class TransactionAccountService:
 
     def create_transactions_account(self, account_id, transaction_id):
         return self.transactions_accounts_dao.create_transactions_account(account_id, transaction_id)
+
+    def create_connection(self, value1, value2):
+        return self.transactions_accounts_dao.create_connection(value1, value2)
 
     def delete_transactions_account(self, id):
         self.transactions_accounts_dao.delete_transactions_account(id)

@@ -121,3 +121,11 @@ class TransactionAccountDAO(BaseDAO):
     def delete_transactions_account(self, id):
         self.cursor.execute("DELETE FROM TransactionsAccounts WHERE id = %s", (id,))
         self.connection.commit()
+
+    def create_connection(self, value1, value2):
+        self.cursor.execute(
+            "CALL insert_into_relation_accounts_transactions(%s, %s)",
+            (value1, value2)
+        )
+        self.connection.commit()
+        return self.cursor.lastrowid

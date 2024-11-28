@@ -1,5 +1,5 @@
 from my_project.auth.domain.domains import (
-    Transaction
+    Transaction, Log, Result
 )
 from my_project.auth.dao.Base_dao import BaseDAO
 
@@ -31,4 +31,39 @@ class TransactionDAO(BaseDAO):
 
     def delete_transaction(self, transaction_id):
         self.cursor.execute("DELETE FROM transactions WHERE transaction_id = %s", (transaction_id,))
+        self.connection.commit()
+
+    def get_all_logs(self):
+        query = 'SELECT * FROM logs'
+        self.cursor.execute(query)
+        result = self.cursor.fetchall()
+        return [Log(**row) for row in result]
+
+    def get_log_by_transaction_id(self, transaction_id):
+        self.cursor.execute("SELECT * FROM logs WHERE transaction_id = %s", (transaction_id,))
+        result = self.cursor.fetchall()
+        if result:
+            return [Log(**row) for row in result]
+        return None
+
+    def insert_into_table(self, table_name, column_list, value_list):
+        query = rf"""CALL insert_into_table('{table_name}', '{column_list}', "{value_list}");"""
+        # print(query)
+        # self.cursor.execute(query)
+        # self.connection.commit()
+        return None
+
+    def count_transaction(self, column_name, operation):
+        self.cursor.execute(
+            "CALL select_with_function_transactions (%s, %s)",
+            (column_name, operation)
+        )
+        res = self.cursor.fetchall()
+        self.connection.close()
+        if res:
+            return [Result(**row) for row in res]
+        return None
+
+    def create_tables(self):
+        self.cursor.execute("CALL CreateRandomTransactionTablesAndCopyData()")
         self.connection.commit()

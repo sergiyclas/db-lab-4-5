@@ -1,4 +1,4 @@
--- DROP DATABASE IF EXISTS online_banking;
+DROP DATABASE IF EXISTS online_banking;
 CREATE DATABASE IF NOT EXISTS online_banking;
 USE online_banking;
 
@@ -83,7 +83,7 @@ CREATE TABLE authorizations (
 
 CREATE TABLE fees (
     fee_id INT PRIMARY KEY AUTO_INCREMENT,
-    transaction_id INT UNIQUE,
+    transaction_id INT UNIQUE, -- обмеження для зв'язку один до одного
     fee_amount DECIMAL(15, 2),
     fee_date DATE,
     FOREIGN KEY (transaction_id) REFERENCES transactions(transaction_id) ON DELETE CASCADE
@@ -91,58 +91,36 @@ CREATE TABLE fees (
 
 CREATE TABLE status_transactions (
     status_id INT PRIMARY KEY AUTO_INCREMENT,
-    transaction_id INT UNIQUE,
+    transaction_id INT UNIQUE, -- обмеження для зв'язку один до одного
     status VARCHAR(50),
     status_date DATE,
     FOREIGN KEY (transaction_id) REFERENCES transactions(transaction_id) ON DELETE CASCADE
 );
 
--- Збережені процедури
-DELIMITER //
 
-DROP PROCEDURE IF EXISTS InsertIntoTable;
-CREATE PROCEDURE InsertIntoTable(IN tableName VARCHAR(50), IN columnName VARCHAR(50), IN value VARCHAR(50))
+-- тригер
+CREATE TABLE logs (
+    log_id INT AUTO_INCREMENT PRIMARY KEY,
+    transaction_id INT NOT NULL,
+    log_action VARCHAR(100),
+    log_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+DELIMITER $$
+CREATE TRIGGER after_transaction_insert
+AFTER INSERT ON transactions
+FOR EACH ROW
 BEGIN
-    SET @sql = CONCAT('INSERT INTO ', tableName, ' (', columnName, ') VALUES (', QUOTE(value), ')');
-    PREPARE stmt FROM @sql;
-    EXECUTE stmt;
-    DEALLOCATE PREPARE stmt;
-END //
-
-DROP PROCEDURE IF EXISTS InsertIntoJoinTable;
-CREATE PROCEDURE InsertIntoJoinTable(IN firstTable VARCHAR(50), IN secondTable VARCHAR(50), IN value1 VARCHAR(50), IN value2 VARCHAR(50))
-BEGIN
-    SET @sql = CONCAT('INSERT INTO ', firstTable, ' (column_name1, column_name2) VALUES ((SELECT id FROM ', secondTable, ' WHERE name = ', QUOTE(value1), '), (SELECT id FROM ', secondTable, ' WHERE name = ', QUOTE(value2), '))');
-    PREPARE stmt FROM @sql;
-    EXECUTE stmt;
-    DEALLOCATE PREPARE stmt;
-END //
-
-DROP PROCEDURE IF EXISTS InsertTenRows;
-CREATE PROCEDURE InsertTenRows(IN tableName VARCHAR(50))
-BEGIN
-    DECLARE i INT DEFAULT 1;
-    WHILE i <= 10 DO
-        SET @sql = CONCAT('INSERT INTO ', tableName, ' (name) VALUES (', QUOTE(CONCAT('Noname', i)), ')');
-        PREPARE stmt FROM @sql;
-        EXECUTE stmt;
-        SET i = i + 1;
-        DEALLOCATE PREPARE stmt;
-    END WHILE;
-END //
-
-DROP PROCEDURE IF EXISTS GetColumnStats;
-CREATE PROCEDURE GetColumnStats(IN statType VARCHAR(10), IN columnName VARCHAR(50), OUT result DECIMAL(15, 2))
-BEGIN
-    SET @sql = CONCAT('SELECT ', statType, '(', columnName, ') INTO @result FROM your_table_name'); -- Змініть your_table_name на вашу таблицю
-    PREPARE stmt FROM @sql;
-    EXECUTE stmt;
-    SET result = @result; -- Зберігаємо результат у вихідному параметрі
-    DEALLOCATE PREPARE stmt;
-END //
-
+    INSERT INTO logs (transaction_id, log_action)
+    VALUES (NEW.transaction_id, 'Transaction inserted');
+    
+    INSERT INTO logs (transaction_id, log_action)
+    VALUES (NEW.transaction_id, 'Transaction reviewed');
+    
+    INSERT INTO logs (transaction_id, log_action)
+    VALUES (NEW.transaction_id, 'Transaction approved');
+END$$
 DELIMITER ;
-
 
 -- Заповнення таблиць
 INSERT INTO customers (customer_name, email, phone) VALUES 
@@ -171,7 +149,13 @@ INSERT INTO accounts (customer_id, account_number, balance) VALUES
 (9, 'ACC10009', 6200.75),
 (10, 'ACC10010', 3700.60),
 (11, 'ACC10011', 5400.40),
-(12, 'ACC10012', 2500.90);
+(12, 'ACC10012', 2500.90),
+(1, 'ACC20001', '10000.00'),
+(1, 'ACC20002', '3000.00'),
+(2, 'ACC30012', 2500.90),
+(3, 'ACC50001', '10000.00'),
+(4, 'ACC30002', '3000.00');
+
 
 INSERT INTO transactions (amount, transaction_date) VALUES 
 (150.75, '2024-01-10'),
@@ -199,7 +183,10 @@ INSERT INTO TransactionsAccounts (account_id, transaction_id) VALUES
 (9, 7),
 (10, 8),
 (11, 9),
-(12, 10);
+(12, 10),
+(12, 2),
+(5, 3),
+(5, 6);
 
 INSERT INTO payment_templates (account_id, template_name, template_details) VALUES 
 (1, 'Template 1', 'Details of template 1'),
@@ -284,3 +271,237 @@ INSERT INTO status_transactions (transaction_id, status, status_date) VALUES
 (10, 'Pending', '2024-10-30'),
 (11, 'Completed', '2024-11-10'),
 (12, 'Failed', '2024-12-15');
+
+
+CREATE INDEX idx_customer_accounts ON accounts(customer_id);
+
+CREATE INDEX idx_transaction_date ON transactions(transaction_date);
+
+CREATE INDEX idx_category_priority_date ON needs(category, priority, payment_date);
+
+DELIMITER $$
+CREATE PROCEDURE insert_into_table(
+ IN table_name VARCHAR(255),
+ IN column_list VARCHAR(255),
+ IN value_list VARCHAR(255)
+)
+BEGIN
+ SET @sql = CONCAT('INSERT INTO ', table_name, ' (', column_list, ')
+VALUES (', value_list, ')');
+ SELECT @sql AS generated_sql;
+ PREPARE stmt FROM @sql;
+ EXECUTE stmt;
+ DEALLOCATE PREPARE stmt;
+END $$
+DELIMITER ;
+
+
+DELIMITER $$
+CREATE PROCEDURE insert_into_relation_accounts_transactions (
+    IN value1 VARCHAR(50),
+    IN value2 VARCHAR(50)
+)
+BEGIN
+    SET @query = CONCAT('INSERT INTO TransactionsAccounts (account_id, transaction_id) ',
+                        'SELECT (SELECT account_id FROM accounts WHERE account_number = "', value1, '"), ',
+                        '(SELECT transaction_id FROM transactions WHERE transaction_id = "', value2, '")');
+    PREPARE stmt FROM @query;
+    EXECUTE stmt;
+    DEALLOCATE PREPARE stmt;
+END;
+$$
+DELIMITER ;
+
+DELIMITER $$
+
+CREATE PROCEDURE insert_multiple_rows_customers (
+    IN start_num INT,
+    IN end_num INT
+)
+BEGIN
+    DECLARE i INT;
+    SET i = start_num;
+    WHILE i <= end_num DO
+        SET @query = CONCAT('INSERT INTO customers (customer_name) VALUES ("Noname', i, '")');
+        PREPARE stmt FROM @query;
+        EXECUTE stmt;
+        DEALLOCATE PREPARE stmt;
+        SET i = i + 1;
+    END WHILE;
+END;
+
+$$
+DELIMITER ;
+
+DELIMITER //
+CREATE PROCEDURE calculate_column_transactions_proc (
+    IN column_name VARCHAR(50),
+    IN operation VARCHAR(10),
+    OUT result DECIMAL(15,2)
+)
+BEGIN
+    -- Змінна для SQL-запиту
+    SET @query = '';
+    SET @temp_result = 0; -- Тимчасова змінна для результату
+
+    -- Вибір операції залежно від введеного параметра
+    IF operation = 'MAX' THEN
+        SET @query = CONCAT('SELECT MAX(', column_name, ') INTO @temp_result FROM transactions');
+    ELSEIF operation = 'MIN' THEN
+        SET @query = CONCAT('SELECT MIN(', column_name, ') INTO @temp_result FROM transactions');
+    ELSEIF operation = 'SUM' THEN
+        SET @query = CONCAT('SELECT SUM(', column_name, ') INTO @temp_result FROM transactions');
+    ELSEIF operation = 'AVG' THEN
+        SET @query = CONCAT('SELECT AVG(', column_name, ') INTO @temp_result FROM transactions');
+    ELSE
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Unsupported operation';
+    END IF;
+
+    -- Виконання запиту
+    PREPARE stmt FROM @query;
+    EXECUTE stmt;
+    DEALLOCATE PREPARE stmt;
+
+    -- Присвоєння результату OUT-параметру
+    SET result = @temp_result;
+END;
+//
+
+CREATE PROCEDURE select_with_function_transactions (
+    IN column_name VARCHAR(50),
+    IN operation VARCHAR(10)
+)
+BEGIN
+    DECLARE result DECIMAL(15,2);
+    CALL calculate_column_transactions_proc(column_name, operation, result);
+    SELECT result AS result;
+END;
+//
+DELIMITER;
+
+
+DELIMITER $$
+CREATE PROCEDURE `CreateRandomTransactionTablesAndCopyData`()
+BEGIN
+    DECLARE done INT DEFAULT FALSE;
+    DECLARE transId INT;
+    DECLARE transAmount DECIMAL(15, 2);
+    DECLARE transDate DATE;
+    DECLARE transaction_cursor CURSOR FOR SELECT transaction_id, amount, transaction_date FROM transactions;
+    DECLARE CONTINUE HANDLER FOR NOT FOUND SET done = TRUE;
+
+    SET @table1_name = CONCAT('transaction_data_', DATE_FORMAT(NOW(), '%Y%m%d_%H%i%s'));
+    SET @table2_name = CONCAT('transaction_data_', DATE_FORMAT(NOW(), '%Y%m%d_%H%i%s'), '_copy');
+
+    SET @create_table1_sql = CONCAT('CREATE TABLE ', @table1_name, ' (
+        transaction_id INT NOT NULL,
+        amount DECIMAL(15, 2) NOT NULL,
+        transaction_date DATE NOT NULL,
+        PRIMARY KEY (transaction_id)
+    ) ENGINE=InnoDB;');
+
+    SET @create_table2_sql = CONCAT('CREATE TABLE ', @table2_name, ' (
+        transaction_id INT NOT NULL,
+        amount DECIMAL(15, 2) NOT NULL,
+        transaction_date DATE NOT NULL,
+        PRIMARY KEY (transaction_id)
+    ) ENGINE=InnoDB;');
+
+    PREPARE stmt1 FROM @create_table1_sql;
+    EXECUTE stmt1;
+    DEALLOCATE PREPARE stmt1;
+
+    PREPARE stmt2 FROM @create_table2_sql;
+    EXECUTE stmt2;
+    DEALLOCATE PREPARE stmt2;
+
+    OPEN transaction_cursor;
+
+    read_loop: LOOP
+        FETCH transaction_cursor INTO transId, transAmount, transDate;
+
+        IF done THEN
+            LEAVE read_loop;
+        END IF;
+
+        IF (RAND() < 0.5) THEN
+            SET @insert_sql = CONCAT('INSERT INTO ', @table1_name,
+                ' (transaction_id, amount, transaction_date) VALUES (',
+                transId, ', ', transAmount, ', ', QUOTE(transDate), ');');
+        ELSE
+            SET @insert_sql = CONCAT('INSERT INTO ', @table2_name,
+                ' (transaction_id, amount, transaction_date) VALUES (',
+                transId, ', ', transAmount, ', ', QUOTE(transDate), ');');
+        END IF;
+
+        PREPARE stmt3 FROM @insert_sql;
+        EXECUTE stmt3;
+        DEALLOCATE PREPARE stmt3;
+    END LOOP;
+
+    CLOSE transaction_cursor;
+END 
+$$
+DELIMITER ;
+
+
+DELIMITER //
+CREATE TRIGGER prevent_delete_transactions
+BEFORE DELETE ON transactions
+FOR EACH ROW
+BEGIN
+    SIGNAL SQLSTATE '45000'
+    SET MESSAGE_TEXT = 'Deleting rows from the transactions table is not allowed.';
+END;
+//
+DELIMITER ;
+
+
+DELIMITER //
+CREATE TRIGGER prevent_invalid_email
+BEFORE INSERT ON customers
+FOR EACH ROW
+BEGIN
+    IF NEW.email LIKE '%00' THEN
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = 'Email cannot end with two zeros.';
+    END IF;
+END;
+//
+DELIMITER ;
+
+
+CREATE TABLE allowed_names (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    name VARCHAR(50) NOT NULL
+);
+
+-- Тригер для перевірки імені
+DELIMITER //
+CREATE TRIGGER validate_allowed_names
+BEFORE INSERT ON allowed_names
+FOR EACH ROW
+BEGIN
+    IF NEW.name NOT IN ('Svitlana', 'Petro', 'Olha', 'Taras') THEN
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = 'Only the names Svitlana, Petro, Olha, or Taras are allowed.';
+    END IF;
+END;//
+DELIMITER ;
+
+
+
+-- CALL CreateRandomTransactionTablesAndCopyData();
+/*
+-- CALL insert_into_notifications('account_id, message', '1, "Account notification"');
+-- CALL insert_into_relation_accounts_transactions('ACC10001', '10');
+-- CALL insert_multiple_rows_customers(1, 10);
+-- CALL calculate_column_transactions_proc('amount', 'SUM', @result);
+-- SELECT @result;
+
+-- CALL calculate_column_transactions_proc('amount', 'AVG', @result);
+-- SELECT @result;
+
+-- CALL select_with_function_transactions('amount', 'AVG');
+*/
+

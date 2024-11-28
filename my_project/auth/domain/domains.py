@@ -47,6 +47,30 @@ class Transaction:
             "transaction_date": self.transaction_date,
         }
 
+class Log:
+    def __init__(self, log_id, transaction_id, log_action, log_time):
+        self.log_id = log_id
+        self.transaction_id = transaction_id
+        self.log_action = log_action
+        self.log_time = log_time
+
+    def to_dict(self):
+        return {
+            "log_id": self.log_id,
+            "transaction_id": self.transaction_id,
+            "log_action": self.log_action,
+            "log_time": self.log_time,
+        }
+
+class Result:
+    def __init__(self, result):
+        self.result = result
+
+    def to_dict(self):
+        return {
+            "result": self.result
+        }
+
 # Клас для таблиці transactions
 class Transaction_All_Info:
     def __init__(self, transaction_id, amount, transaction_date, fee_amount=None, fee_date=None, status=None, status_date=None):
