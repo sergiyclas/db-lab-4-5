@@ -4,16 +4,6 @@ from config import config
 
 config = config.load_db_config()
 
-def create_database():
-    config_without_db = config.copy()
-    config_without_db.pop("database")  # прибираємо 'database'
-    connection = mysql.connector.connect(**config_without_db)
-    cursor = connection.cursor()
-    cursor.execute("CREATE DATABASE IF NOT EXISTS online_banking")
-    connection.commit()
-    cursor.close()
-    connection.close()
-
 
 def create_connection():
     """Створення підключення до MySQL."""
