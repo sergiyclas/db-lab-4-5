@@ -5,6 +5,18 @@ from config import config
 config = config.load_db_config()
 
 
+def create_database_if_not_exists(config):
+    """Створення бази даних, якщо вона не існує, без підключення до конкретної БД."""
+    config_without_db = config.copy()
+    config_without_db.pop("database", None)
+    connection = mysql.connector.connect(**config_without_db)
+    cursor = connection.cursor()
+    cursor.execute("CREATE DATABASE IF NOT EXISTS online_banking")
+    print("База даних створена або вже існує.")
+    cursor.close()
+    connection.close()
+
+
 def create_connection():
     """Створення підключення до MySQL."""
     connection = None
@@ -74,7 +86,7 @@ def insert_sample_data(connection):
 
 def main():
     # Створюємо підключення до MySQL
-    create_database()
+    create_database_if_not_exists(config)
 
     # connection = create_connection()
 
