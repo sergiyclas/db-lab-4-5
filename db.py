@@ -4,6 +4,17 @@ from config import config
 
 config = config.load_db_config()
 
+def create_database():
+    config_without_db = config.copy()
+    config_without_db.pop("database")  # прибираємо 'database'
+    connection = mysql.connector.connect(**config_without_db)
+    cursor = connection.cursor()
+    cursor.execute("CREATE DATABASE IF NOT EXISTS online_banking")
+    connection.commit()
+    cursor.close()
+    connection.close()
+
+
 def create_connection():
     """Створення підключення до MySQL."""
     connection = None
@@ -73,24 +84,26 @@ def insert_sample_data(connection):
 
 def main():
     # Створюємо підключення до MySQL
-    connection = create_connection()
+    create_database()
 
-    if connection is not None and connection.is_connected():
+    # connection = create_connection()
+
+    # if connection is not None and connection.is_connected():
         # Створюємо базу даних (якщо ще не створена)
-        create_database(connection)
+        # create_database(connection)
 
-        # Перепідключаємося до новоствореної БД
-        config['database'] = 'db_lab_4_5'
-        connection = mysql.connector.connect(**config)
+    # Перепідключаємося до новоствореної БД
+    # config['database'] = 'db_lab_4_5'
+    connection = mysql.connector.connect(**config)
 
-        # Створюємо таблиці
-        create_tables(connection)
+    # Створюємо таблиці
+    create_tables(connection)
 
-        # Вставляємо тестові дані
-        insert_sample_data(connection)
+    # Вставляємо тестові дані
+    insert_sample_data(connection)
 
-        # Закриваємо з'єднання
-        connection.close()
+    # Закриваємо з'єднання
+    connection.close()
 
 if __name__ == "__main__":
     main()
