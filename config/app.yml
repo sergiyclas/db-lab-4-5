@@ -1,5 +1,8 @@
 database:
-  host: 'localhost'
+  host: '104.154.58.244'
   user: 'root'
-  password: '7979'
+  password: 'Qwerty1234!'
   database: 'online_banking'
+
+# localhost
+# 7979G
