@@ -7,8 +7,10 @@ from my_project.database.functions import setup_functions
 from config import config
 from flask_cors import CORS
 import mysql.connector
+from flasgger import Swagger
 
 app = Flask(__name__)
+Swagger(app)
 CORS(app)
 
 # Завантаження конфігурації бази даних
