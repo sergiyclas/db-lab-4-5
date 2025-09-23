@@ -106,22 +106,6 @@ CREATE TABLE logs (
     log_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
-DELIMITER $$
-CREATE TRIGGER after_transaction_insert
-AFTER INSERT ON transactions
-FOR EACH ROW
-BEGIN
-    INSERT INTO logs (transaction_id, log_action)
-    VALUES (NEW.transaction_id, 'Transaction inserted');
-    
-    INSERT INTO logs (transaction_id, log_action)
-    VALUES (NEW.transaction_id, 'Transaction reviewed');
-    
-    INSERT INTO logs (transaction_id, log_action)
-    VALUES (NEW.transaction_id, 'Transaction approved');
-END$$
-DELIMITER ;
-
 -- Заповнення таблиць
 INSERT INTO customers (customer_name, email, phone) VALUES 
 ('Customer 1', 'customer1@mail.com', '+380981234567'),

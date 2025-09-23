@@ -1,3 +1,19 @@
+DELIMITER $$
+CREATE TRIGGER after_transaction_insert
+AFTER INSERT ON transactions
+FOR EACH ROW
+BEGIN
+    INSERT INTO logs (transaction_id, log_action)
+    VALUES (NEW.transaction_id, 'Transaction inserted');
+
+    INSERT INTO logs (transaction_id, log_action)
+    VALUES (NEW.transaction_id, 'Transaction reviewed');
+
+    INSERT INTO logs (transaction_id, log_action)
+    VALUES (NEW.transaction_id, 'Transaction approved');
+END$$
+DELIMITER ;
+
 
 DELIMITER $$
 CREATE PROCEDURE insert_into_table(
