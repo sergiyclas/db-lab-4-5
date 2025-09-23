@@ -8,8 +8,11 @@ from config import config
 from flask_cors import CORS
 import mysql.connector
 from flasgger import Swagger
+from db import main
 
 app = Flask(__name__)
+main()
+
 Swagger(app)
 CORS(app)
 
