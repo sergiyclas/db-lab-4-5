@@ -12,6 +12,7 @@ def connect_to_db():
         host=db_config['host'],
         user=db_config['user'],
         password=db_config['password'],
-        database=db_config['db']
+        database=db_config['db'],
+        port=db_config['port']
     )
     return connection
