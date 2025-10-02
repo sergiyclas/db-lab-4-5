@@ -30,4 +30,4 @@ jobs:
           cd /home/${{ secrets.VM_USER }}/db-lab-4-5
           source venv/bin/activate
           pkill -f gunicorn || true
-          nohup gunicorn -b 0.0.0.0:5000 app:app > gunicorn.log 2>&1 &
+          gunicorn -b 0.0.0.0:5000 app:app --daemon
