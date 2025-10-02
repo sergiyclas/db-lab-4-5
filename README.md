@@ -48,6 +48,11 @@ pip install -r requirements.txt
 
 ## Tu run:
 
+Go to the root folder of the app:
+```shell
+cd db-lab-4-5/
+```
+Run app:
 ```shell
 ./vevn/bin/gunicorn -b 0.0.0.0:5000 app:app
 ```
