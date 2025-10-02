@@ -18,7 +18,7 @@ jobs:
         username: ${{ secrets.VM_USER }}
         key: ${{ secrets.VM_SSH_KEY }}
         source: "."
-        target: "/home/<user>/project"
+        target: "/home/{{ secrets.VM_USER }}/project"
 
     - name: Restart app on VM
       uses: appleboy/ssh-action@v0.1.6
