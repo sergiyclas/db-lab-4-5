@@ -51,4 +51,3 @@ pip install -r requirements.txt
 ```shell
 ./vevn/bin/gunicorn -b 0.0.0.0:5000 app:app
 ```
-
