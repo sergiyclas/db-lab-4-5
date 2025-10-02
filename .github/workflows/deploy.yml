@@ -1,0 +1,33 @@
+name: Deploy Flask App to VM
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Copy files to server
+      uses: appleboy/scp-action@v0.1.4
+      with:
+        host: ${{ secrets.VM_IP }}
+        username: ${{ secrets.VM_USER }}
+        key: ${{ secrets.VM_SSH_KEY }}
+        source: "."
+        target: "/home/<user>/project"
+
+    - name: Restart app on VM
+      uses: appleboy/ssh-action@v0.1.6
+      with:
+        host: ${{ secrets.VM_IP }}
+        username: ${{ secrets.VM_USER }}
+        key: ${{ secrets.VM_SSH_KEY }}
+        script: |
+          cd /home/{{ secrets.VM_USER }}/project
+          source venv/bin/activate
+          pkill -f gunicorn || true
+          gunicorn -b 0.0.0.0:5000 app:app &
