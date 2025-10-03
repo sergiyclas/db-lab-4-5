@@ -1,17 +1,57 @@
 from flask import request, jsonify
 from my_project.auth.service.user_service import AccountService
+from flask_jwt_extended import (
+    JWTManager, create_access_token, jwt_required, get_jwt_identity
+)
 
 account_service = AccountService()
 
 def init_account_routes(app):
-    # Маршрути для рахунків
+    @app.route("/login", methods=["POST"])
+    def login():
+        """
+        Login to get JWT token
+        ---
+        tags:
+          - Auth
+        parameters:
+          - in: body
+            name: body
+            required: true
+            schema:
+              type: object
+              required: [username, password]
+              properties:
+                username: {type: string, example: "admin"}
+                password: {type: string, example: "123456"}
+        responses:
+          200:
+            description: Token successfully created
+            schema:
+              type: object
+              properties:
+                access_token: {type: string}
+          401:
+            description: Invalid credentials
+        """
+        username = request.json.get("username")
+        password = request.json.get("password")
+
+        if username == "admin" and password == "123456":
+            token = create_access_token(identity=username)
+            return jsonify(access_token=token)
+        return jsonify({"msg": "Bad credentials"}), 401
+
     @app.route("/accounts", methods=["GET"])
+    @jwt_required()
     def get_accounts():
         """
         Get all accounts
         ---
         tags:
           - Accounts
+        security:
+          - BearerAuth: []
         responses:
           200:
             description: A list of accounts
@@ -38,12 +78,15 @@ def init_account_routes(app):
         return jsonify([account.to_dict() for account in accounts])
 
     @app.route("/accounts/<int:account_id>", methods=["GET"])
+    @jwt_required()
     def get_account(account_id):
         """
         Get account by ID
         ---
         tags:
           - Accounts
+        security:
+          - BearerAuth: []
         parameters:
           - name: account_id
             in: path
@@ -69,12 +112,15 @@ def init_account_routes(app):
         return jsonify({"error": "Account not found"}), 404
 
     @app.route("/accounts", methods=["POST"])
+    @jwt_required()
     def create_account():
         """
         Create a new account
         ---
         tags:
           - Accounts
+        security:
+          - BearerAuth: []
         parameters:
           - in: body
             name: body
@@ -95,7 +141,9 @@ def init_account_routes(app):
                 id: {type: integer, example: 13}
         """
         data = request.get_json()
-        account_id = account_service.create_account(data['customer_id'], data['account_number'], data['balance'])
+        account_id = account_service.create_account(
+            data['customer_id'], data['account_number'], data['balance']
+        )
         return jsonify({"id": account_id}), 201
 
     @app.route("/accounts/<int:account_id>", methods=["PUT"])

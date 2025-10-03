@@ -1,4 +1,5 @@
 from flask import Flask
+from flask_jwt_extended import JWTManager
 
 from my_project.database.tables import setup_tables
 from my_project.database.triggers import setup_triggers, drop_triggers
@@ -9,12 +10,17 @@ from flask_cors import CORS
 import mysql.connector
 from flasgger import Swagger
 from db import main
+import os
+
 
 app = Flask(__name__)
 main()
 
 Swagger(app)
 CORS(app)
+
+app.config["JWT_SECRET_KEY"] = os.getenv('JWT_SECRET')
+jwt = JWTManager(app)
 
 # Завантаження конфігурації бази даних
 db_config = config.load_db_config()
