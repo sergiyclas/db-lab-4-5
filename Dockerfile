@@ -14,3 +14,6 @@ COPY . /app
 
 # Запускаємо gunicorn
 CMD ["gunicorn", "-b", "0.0.0.0:5000", "app:app"]
+
+HEALTHCHECK --interval=30s --timeout=10s --retries=3 \
+  CMD curl -f http://localhost:5000/health || exit 1

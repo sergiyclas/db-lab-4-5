@@ -40,6 +40,10 @@ init_account_routes(app)
 init_transaction_routes(app)
 init_transaction_account_routes(app)
 
+@app.route("/health")
+def health():
+    return {"status": "ok"}, 200
+
 # Закриття з’єднання після ініціалізації
 cursor.close()
 db_connection.close()
