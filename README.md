@@ -56,3 +56,34 @@ Run app:
 ```shell
 ./vevn/bin/gunicorn -b 0.0.0.0:5000 app:app
 ```
+
+
+## Add SSH Key:
+
+### Generate key on Local Machine:
+```shell
+ssh-keygen -t rsa -b 4096 -C "github-actions" -f github-actions-key
+```
+
+To show private key
+```shell
+cat .\github-actions-key
+```
+To show public key
+```shell
+cat .\github-actions-key.pub
+```
+
+### Copy public key to VM:
+```shell
+echo "{{your_public_key}}" >> ~/.ssh/authorized_keys
+```
+
+### Copy private key to GitHub Secrets:
+```
+-----BEGIN OPENSSH PRIVATE KEY-----
+b3BlbnNzaC1rZXktdjEAAAAABG5vbmUAA
+...
+3nRTQBTTqYkAAAAOZ2l0aHViLWFjdGlvbnMBAgMEBQ==
+-----END OPENSSH PRIVATE KEY-----
+```
