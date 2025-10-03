@@ -20,14 +20,18 @@ jobs:
         source: "."
         target: "/home/${{ secrets.VM_USER }}/project"
 
-    - name: Restart app on VM
+    - name: Build and run Docker container on server
       uses: appleboy/ssh-action@v0.1.6
       with:
         host: ${{ secrets.VM_IP }}
         username: ${{ secrets.VM_USER }}
         key: ${{ secrets.VM_SSH_KEY }}
         script: |
-          cd /home/${{ secrets.VM_USER }}/db-lab-4-5
-          source venv/bin/activate
-          pkill -f gunicorn || true
-          gunicorn -b 0.0.0.0:5000 app:app --daemon
+          cd /home/${{ secrets.VM_USER }}/project
+          
+          docker build -t 1-lab-clouds-app:latest .
+          
+          docker stop 1-lab-clouds-app || true
+
+          docker rm 1-lab-clouds-app || true
+          docker run -d --name 1-lab-clouds-app -p 5000:5000 1-lab-clouds-app:latest
