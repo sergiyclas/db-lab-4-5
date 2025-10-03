@@ -35,3 +35,15 @@ jobs:
 
           docker rm 1-lab-clouds-app || true
           docker run -d --name 1-lab-clouds-app -p 5000:5000 1-lab-clouds-app:latest
+          docker run -d -p 5000:5000 \
+            --name 1-lab-clouds-app \
+            -e DB_HOST=${{ secrets.DB_HOST }} \
+            -e DB_USER=${{ secrets.DB_USER }} \
+            -e DB_PASSWORD=${{ secrets.DB_PASSWORD }} \
+            -e DB_NAME=${{ secrets.DB_NAME }} \
+            -e DB_PORT=${{ secrets.DB_PORT }} \
+            1-lab-clouds-app:latest
+
+          # Виводимо healthcheck
+          sleep 5
+          docker inspect --format='{{.State.Health.Status}}' 1-lab-clouds-app

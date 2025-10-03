@@ -1,9 +1,7 @@
-database:
-  host: '104.154.58.244'
-  user: 'root2'
-  password: 'Qwerty1234!'
-  database: 'online_banking'
-  port: '3306'
-
-# localhost
-# 7979G
+#database:
+#  host: 'localhost'
+#  user: 'root'
+#  password: 'password'
+#  database: 'online_banking'
+#  port: '3306'
+# 7979
